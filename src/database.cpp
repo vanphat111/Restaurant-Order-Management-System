@@ -32,3 +32,20 @@ DatabaseManager::~DatabaseManager() {
         delete con;
     }
 }
+
+std::string DatabaseManager::authenticate(std::string user, std::string pass) {
+    sql::Connection* con = DatabaseManager::getInstance()->getConnection();
+    sql::PreparedStatement* pstmt = con->prepareStatement(
+        "SELECT Role FROM User WHERE UserName = ? AND Password = ?"
+    );
+    pstmt->setString(1, user);
+    pstmt->setString(2, pass);
+    sql::ResultSet* res = pstmt->executeQuery();
+
+    std::string role = "none";
+    if (res->next()) {
+        role = res->getString("Role");
+    }
+    delete res; delete pstmt;
+    return role; 
+}

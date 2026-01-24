@@ -5,6 +5,10 @@
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/statement.h>
+#include <cppconn/prepared_statement.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+
 #include <string>
 
 class DatabaseManager {
@@ -17,4 +21,5 @@ public:
     static DatabaseManager* getInstance(std::string ip = "127.0.0.1:3306", std::string user = "root", std::string pass = "1234");
     sql::Connection* getConnection();
     ~DatabaseManager();
+    std::string authenticate(std::string user, std::string pass);
 };
