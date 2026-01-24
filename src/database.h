@@ -1,5 +1,7 @@
 // database.h
 
+#pragma once
+
 #include <mysql_driver.h>
 #include <mysql_connection.h>
 #include <cppconn/driver.h>
@@ -21,5 +23,4 @@ public:
     static DatabaseManager* getInstance(std::string ip = "127.0.0.1:3306", std::string user = "root", std::string pass = "1234");
     sql::Connection* getConnection();
     ~DatabaseManager();
-    std::string authenticate(std::string user, std::string pass);
 };
