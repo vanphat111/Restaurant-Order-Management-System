@@ -19,6 +19,9 @@ void Chef::showMenu() {
             continue;
         }
 
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+
         if (choice == 1) viewPendingOrders();
     } while (choice != 0);
 }
@@ -62,12 +65,26 @@ void Chef::viewPendingOrders() {
                 } else {
                     std::cout << "    " << std::left << std::setw(9) << currentID << std::setw(10) << currentTable << currentTime << "\n";
                 }
+
+                sql::PreparedStatement* pstmtItems = con->prepareStatement(
+                    "SELECT m.ItemName, od.Quantity "
+                    "FROM OrderDetail od JOIN MenuItem m ON od.ItemCode = m.ItemCode "
+                    "WHERE od.OrderID = ?"
+                );
+                pstmtItems->setString(1, currentID);
+                sql::ResultSet* resItems = pstmtItems->executeQuery();
+
+                while (resItems->next()) {
+                    std::cout << "       - " << std::left << std::setw(20) << resItems->getString("ItemName") 
+                              << " x" << resItems->getInt("Quantity") << "\n";
+                }
+                std::cout << "----------------------------------------------\n";
+
                 count++;
             }
 
             if (count == 0) {
                 std::cout << "\n[ALL CLEAR] No pending orders. Press Enter to back.";
-                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                 std::cin.get();
                 delete res; delete stmt;
                 break;
