@@ -1,3 +1,5 @@
+// chef.cpp
+
 #include "chef.h"
 #include <iomanip>
 #include <limits>
@@ -20,7 +22,6 @@ void Chef::showMenu() {
         }
 
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
 
         if (choice == 1) viewPendingOrders();
     } while (choice != 0);
@@ -49,18 +50,16 @@ void Chef::viewPendingOrders() {
                       << "Order Time\n";
             std::cout << "------------------------------------------\n";
 
-            std::string topOrderID = "";
-            std::string topTable = "";
-
+            int topOrderID = 0;
             int count = 0;
+
             while (res->next()) {
-                std::string currentID = res->getString("OrderID");
+                int currentID = res->getInt("OrderID");
                 std::string currentTable = res->getString("TableNumber");
                 std::string currentTime = res->getString("CreationTime");
 
                 if (count == 0) {
                     topOrderID = currentID;
-                    topTable = currentTable;
                     std::cout << ">>> " << std::left << std::setw(9) << currentID << std::setw(10) << currentTable << currentTime <<"\n";
                 } else {
                     std::cout << "    " << std::left << std::setw(9) << currentID << std::setw(10) << currentTable << currentTime << "\n";
@@ -71,7 +70,7 @@ void Chef::viewPendingOrders() {
                     "FROM OrderDetail od JOIN MenuItem m ON od.ItemCode = m.ItemCode "
                     "WHERE od.OrderID = ?"
                 );
-                pstmtItems->setString(1, currentID);
+                pstmtItems->setInt(1, currentID);
                 sql::ResultSet* resItems = pstmtItems->executeQuery();
 
                 while (resItems->next()) {
@@ -80,6 +79,7 @@ void Chef::viewPendingOrders() {
                 }
                 std::cout << "----------------------------------------------\n";
 
+                delete resItems; delete pstmtItems;
                 count++;
             }
 
@@ -101,23 +101,22 @@ void Chef::viewPendingOrders() {
             std::getline(std::cin, input); 
 
             if (input == "q" || input == "Q") break;
-
             
-            updateCookingStatus(0, topOrderID, "READY");
+            updateCookingStatus(topOrderID, "READY");
         }
     } catch (sql::SQLException &e) {
         std::cerr << "DB Error: " << e.what() << std::endl;
     }
 }
 
-void Chef::updateCookingStatus(int dummy, std::string orderID, std::string status) {
+void Chef::updateCookingStatus(int orderID, std::string status) {
     try {
         sql::Connection* con = DatabaseManager::getInstance()->getConnection();
         sql::PreparedStatement* pstmt = con->prepareStatement(
             "UPDATE Orders SET CookingStatus = ? WHERE OrderID = ?"
         );
         pstmt->setString(1, status);
-        pstmt->setString(2, orderID);
+        pstmt->setInt(2, orderID);
         pstmt->executeUpdate();
         delete pstmt;
     } catch (sql::SQLException &e) {

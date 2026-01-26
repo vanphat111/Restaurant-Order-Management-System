@@ -9,5 +9,5 @@ public:
     
     void showMenu() override;
     void viewPendingOrders();
-    void updateCookingStatus(int orderID, std::string itemCode, std::string status);
+    void updateCookingStatus(int orderID, std::string status);
 };
