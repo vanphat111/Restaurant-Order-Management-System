@@ -44,7 +44,7 @@ CREATE TABLE MenuItem (
 );
 
 CREATE TABLE Orders (
-    OrderID CHAR(10) PRIMARY KEY,
+    OrderID INT AUTO_INCREMENT PRIMARY KEY,
     TableNumber VARCHAR(10),
     CreationTime DATETIME,
     TotalAmount DECIMAL(10,2),
@@ -53,7 +53,7 @@ CREATE TABLE Orders (
 );
 
 CREATE TABLE OrderDetail (
-    OrderID CHAR(10),
+    OrderID INT,
     ItemCode VARCHAR(10),
     Quantity INT,
     SubTotal DECIMAL(10,2),
