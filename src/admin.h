@@ -11,11 +11,19 @@ public:
 
     void showMenu() override;
 
-    void manageUsers();
-    void viewRevenueReport();
+    void viewSaleReport();
+    void generateDailyReport();
+    void getBestSellers();
     
+    void manageUsers();
     void addUser();
     void changeRole();
     void deleteUser();
+
+    void manageMenu();
+    void addMenuItem();
+    void updateMenuItem();
+    void deleteMenuItem();
+    void displayAllItems();
 
 };
