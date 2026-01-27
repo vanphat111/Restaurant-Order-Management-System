@@ -3,9 +3,10 @@
 
 class Waiter : public User {
 public:
-    Waiter(std::string name) : User(name, "Wai") {}
+    Waiter(std::string name) : User(name, "Waiter") {}
 
     void showMenu() override;
+    void displayMenu();
     void AssignTable();
     void placeOrder();
     void updateOrder();
