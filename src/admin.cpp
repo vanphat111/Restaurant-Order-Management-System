@@ -100,13 +100,15 @@ void Admin::addUser() {
     }
 
     try {
+        std::string hashedPassword = User::hashPassword(pass);
+
         sql::Connection* con = DatabaseManager::getInstance()->getConnection();
         sql::PreparedStatement* pstmt = con->prepareStatement(
             "INSERT INTO User(UserID, UserName, Password, Role) VALUES(?, ?, ?, ?)"
         );
         pstmt->setString(1, id);
         pstmt->setString(2, name);
-        pstmt->setString(3, pass);
+        pstmt->setString(3, hashedPassword);
         pstmt->setString(4, role);
         pstmt->executeUpdate();
         std::cout << COLOR_SUCCESS << "[SUCCESS] User added successfully." << RESET << "\n";
