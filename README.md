@@ -1,78 +1,96 @@
-# Restaurant Order Management System (C++ OOP - Console)
+# 🍽️ Restaurant Order Management System
 
-Bài tập nhóm: Restaurant Order Management System (console/TUI), viết bằng C++ theo OOP.
+![C++](https://img.shields.io/badge/Language-C++-00599C?style=for-the-badge&logo=c%2B%2B)
+![MySQL](https://img.shields.io/badge/Database-MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Docker](https://img.shields.io/badge/Deployment-Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-## Folder
-- src/      : chứa toàn bộ file .cpp và .h/.hpp 
-- docs/     : tài liệu báo cáo (requirements/design/testing)
-- diagrams/ : file .drawio (DFD, Use Case, Class, DB)
-- assets/   : hình chụp màn hình / ảnh export từ diagrams
-- build/    : file biên dịch (không commit)
+> A comprehensive Terminal-based Console Application designed to streamline restaurant operations. Developed as a final project for the **Software Engineering** course at UTH (Ho Chi Minh City University of Transport).
 
-## Build & Run (Linux/macOS)
-    mkdir -p build
-    g++ src/*.cpp -o build/app
-    ./build/app
+## 📋 Table of Contents
+- [About the Project](#-about-the-project)
+- [Team Members](#-team-members)
+- [Key Features](#-key-features)
+- [Tech Stack](#-tech-stack)
+- [System Architecture](#-system-architecture)
+- [Installation & Usage (Docker)](#-installation--usage-docker)
+- [Screenshots](#-screenshots)
 
-## Build & Run (Windows - MinGW g++)
-    mkdir build
-    g++ src\*.cpp -o build\app.exe
-    build\app.exe
+## 📖 About the Project
+This project aims to digitize the manual ordering process in restaurants. It features a robust **Terminal User Interface (TUI)** with a modern **Dracula theme**, ensuring a pleasant user experience for staff working in low-light environments. The system supports Role-Based Access Control (RBAC) to separate duties between Admins, Chefs, and Waiters.
 
-## Git rules
-- Mỗi người làm 1 branch riêng.
-- Làm xong tạo Pull Request vào main.
-- Không commit build/ và file chạy (*.o, *.exe).
-- Lần đầu (mỗi người làm 1 lần)
+## 👥 Team Members
+We are a team of 5 students from UTH passionate about Software Engineering and DevOps.
 
-#### Clone repo
-    git clone <link_repo>
-    cd restaurant-order-management-system
+| No. | Student Name | GitHub |
+| :-: | :--- | :--- |
+| 1 | **Hồ Văn Phát** | [@vanphat111](https://github.com/vanphat111) |
+| 2 | **Đoàn Phú Trọng** |  [@trongDP-lead-git](https://github.com/trongDP-lead-git) |
+| 3 | **Lê Thanh Nhị** | [@thanhnhi-gif](https://github.com/thanhnhi-gif) |
+| 4 | **Thông Hoàn Thái** | [@hoanthai06](https://github.com/hoanthai06) |
+| 5 | **Phan Trần Quang Lâm** | [@quanglam061206-glitch](https://github.com/quanglam061206-glitch) |
 
-    # Tạo branch của mình (không làm trên main)
-    git checkout -b ten_cua_ban
+## ✨ Key Features
 
-#### Mỗi lần bắt đầu code (trước khi sửa gì)
+### 🛡️ Admin
+- **User Management**: Add, remove, and update staff roles (Chef, Waiter).
+- **Menu Management**: CRUD operations for menu items (adjust prices, inventory).
+- **Reporting**: View daily revenue, best-selling items, and generate financial reports.
 
-    # Cập nhật main mới nhất
-    git checkout main
-    git pull origin main
+### 🍳 Chef
+- **Kitchen Queue**: Real-time view of pending orders sorted by time.
+- **Workflow Control**: Update order status from `PENDING` to `READY`.
+- **Cooking Dashboard**: Highlighted interface for urgent orders.
 
-    # Quay lại branch mình và nhập main vào
-    git checkout ten_cua_ban
-    git merge main
+### 💁 Waiter
+- **Table Management**: Visual map of Available/Occupied tables.
+- **Order Processing**: Create orders, add/remove items, and modify quantities.
+- **Billing**: Calculate totals and process payments (releases table automatically).
 
-#### Đẩy code lên (sau khi làm xong 1 phần)
+## 🛠 Tech Stack
+- **Language**: C++ (Standard 17)
+- **Database**: MySQL 8.0
+- **Library**: `mysql-connector-c++`
+- **Containerization**: Docker & Docker Compose
+- **Design Pattern**: Singleton (DB Connection), MVC Architecture.
 
-    # Kiểm tra file đã sửa
-    git status
 
-    # Add + commit
-    git add .
-    git commit -m "mota ngan gon"
+## 🚀 Installation & Usage (Docker)
 
-    # Push lên GitHub
-    git push -u origin ten_cua_ban # (lần đầu)
-    git push # (những lần sau)
+This project is fully containerized. You can run both the Database and the Client Application with a single command, ensuring a consistent environment without installing C++ compilers or MySQL manually.
 
-    # git push là lệnh đẩy commit từ máy lên repo trên GitHub.​
-#### Nguyên tắc
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) or Docker Engine.
+- Git.
 
-- Không ai push trực tiếp lên main, chỉ merge bằng Pull Request.​
+### Step-by-Step Guide
 
--  Làm xong 1 phần thì tạo Pull Request từ branch mình vào main để nhóm review/merge.​
+1.  **Clone the Repository**
+    ```bash
+    git clone [https://github.com/vanphat111/Restaurant-Order-Management-System.git](https://github.com/vanphat111/Restaurant-Order-Management-System.git)
+    cd Restaurant-Order-Management-System
+    ```
 
-## Thành viên
+2.  **Run with Docker Compose**
+    This command will download MySQL, build the C++ application, and link them together in a private network.
+    ```bash
+    docker-compose up -d --build
+    ```
+    *(Wait a few seconds for the Database to initialize)*.
 
-| No. | Name     | Student ID | Role              |Tasks                                              |
-| --- | -------- | ---------- | ----------------- | ------------------------------------------------- |
-| 1   | <Name 1> | <ID 1>     | Lead / Docs       | Requirements, final report, interface description |
-| 2   | <Name 2> | <ID 2>     | Analyst / Design  | Use case, DFD, class diagram, update diagrams     |
-| 3   | <Name 3> | <ID 3>     | Data model / Docs | Data model, DB schema, TUI screens description    |
-| 4   | <Name 4> | <ID 4>     | Developer         | Implement waiter/order + unit tests               |
-| 5   | <Name 5> | <ID 5>     | Git/Dev + QA      | Git workflow, merge PR, debug support, test cases |
+3.  **Launch the Application**
+    Since this is an interactive Console Application (TUI), you need to attach to the running container:
+    ```bash
+    docker attach restaurant_client
+    ```
 
-## License
+4.  **Stop the Application**
+    To exit the app, select `0. Exit` in the menu. To stop and remove the containers:
+    ```bash
+    docker-compose down
+    ```
 
-This project is licensed under the **GNU General Public License v3.0**.
-See [LICENSE](https://www.gnu.org/licenses/gpl-3.0.html) for full details.
+### ⚠️ Troubleshooting
+- **Database Connection Error**: If you see a connection error immediately after attaching, the MySQL container might still be booting up. Wait 10 seconds and try running the app again inside the container:
+  ```bash
+  # Inside the container shell if the app crashed
+  ./restaurant_app
