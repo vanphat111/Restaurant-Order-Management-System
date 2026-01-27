@@ -3,7 +3,40 @@
 #include <iomanip>
 #include <limits>
 
-void Waiter::AssignTable() {
+void Waiter::showMenu()
+{
+    int choice;
+    do {
+        std::cout << "\n==========================================";
+        std::cout << "\n   WAITER DASHBOARD - waiter: " << this->userName;
+        std::cout << "\n==========================================";
+        std::cout << "\n1. Assign Table";
+        std::cout << "\n2. Place Order";
+        std::cout << "\n3. Update Order";
+        std::cout << "\n4. Request Payment";
+        std::cout << "\n0. Logout";
+        std::cout << "\n------------------------------------------";
+        std::cout << "\nEnter choice: ";
+
+        if (!(std::cin >> choice)) {
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            continue;
+        }
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+        switch (choice) {
+        case 1: assignTable(); break;
+        case 2: placeOrder(); break;
+        case 3: updateOrder(); break;
+        case 4: requestPayment(); break;
+        case 0: break;
+        default: std::cout << "Invalid choice!\n";
+        }
+    } while (choice != 0);
+}
+
+void Waiter::assignTable() {
     try {
         sql::Connection* con = DatabaseManager::getInstance()->getConnection();
         sql::Statement* stmt = con->createStatement();
@@ -61,7 +94,6 @@ void Waiter::placeOrder() {
     try {
         sql::Connection* con = DatabaseManager::getInstance()->getConnection();
 
-        // 1. Show menu
         sql::Statement* stmt = con->createStatement();
         sql::ResultSet* res = stmt->executeQuery(
             "SELECT ItemCode, ItemName, Price, InventoryQty, Category "
@@ -81,12 +113,10 @@ void Waiter::placeOrder() {
         std::cout << "Table number: ";
         std::cin >> tableNumber;
 
-        std::string orderID = "O" + std::to_string(time(nullptr));
         sql::PreparedStatement* pstmtOrder = con->prepareStatement(
-            "INSERT INTO Orders VALUES (?, ?, NOW(), 0, 'PENDING')"
+            "INSERT INTO Orders (TableNumber,CreationTime,TotalAmount,CookingStatus)  VALUES ( ?, NOW(), 0, 'PENDING')"
         );
-        pstmtOrder->setString(1, orderID);
-        pstmtOrder->setString(2, tableNumber);
+        pstmtOrder->setString(1, tableNumber);
         pstmtOrder->executeUpdate();
         delete pstmtOrder;
 
@@ -166,7 +196,7 @@ void Waiter::updateOrder()
         std::cout << "Enter Order ID: ";
         std::cin >> orderID;
 
-        int choice:
+        int choice;
         do {
             std::cout << "==========================================\n";
             std::cout << "               UPDATE ORDER \n";
@@ -204,9 +234,7 @@ void Waiter::updateOrder()
                     price = rs->getDouble("Price");
 
 
-                    sql::PreparedStatement* insertStmt =
-                        con->prepareStatement(
-                            "INSERT INTO OrderDetail VALUES (?, ?, ?, ?)");
+                    sql::PreparedStatement* insertStmt = con->prepareStatement("INSERT INTO OrderDetail VALUES (?, ?, ?, ?)");
 
 
                     insertStmt->setString(1, orderID);
@@ -247,9 +275,7 @@ void Waiter::updateOrder()
 
                     sql::PreparedStatement* updateStmt =
                         con->prepareStatement(
-                            "UPDATE OrderDetail "
-                            "SET Quantity = ?, SubTotal = ? "
-                            "WHERE OrderID = ? AND ItemCode = ?");
+                            "UPDATE OrderDetail SET Quantity = ?, SubTotal = ? WHERE OrderID = ? AND ItemCode = ?");
 
 
                     updateStmt->setInt(1, qty);
@@ -276,10 +302,7 @@ void Waiter::updateOrder()
                 std::cin >> itemCode;
 
 
-                sql::PreparedStatement* delStmt =
-                    con->prepareStatement(
-                        "DELETE FROM OrderDetail "
-                        "WHERE OrderID = ? AND ItemCode = ?");
+                sql::PreparedStatement* delStmt = con->prepareStatement("DELETE FROM OrderDetail WHERE OrderID = ? AND ItemCode = ?");
                 delStmt->setString(1, orderID);
                 delStmt->setString(2, itemCode);
                 delStmt->execute();
@@ -289,29 +312,23 @@ void Waiter::updateOrder()
                 std::cout << "Item removed!\n";
             }
 
-        } while (!= 0){
-            sql::PreparedStatement* totalStmt =
-                con->prepareStatement(
-                    "UPDATE Orders "
-                    "SET TotalAmount = ("
-                    "SELECT IFNULL(SUM(SubTotal),0) "
-                    "FROM OrderDetail WHERE OrderID = ?)"
-                    "WHERE OrderID = ?");
-            totalStmt->setString(1, orderID);
-            totalStmt->setString(2, orderID);
-            totalStmt->execute();
+        } while (choice != 0);
+        
+        sql::PreparedStatement* totalStmt = con->prepareStatement("UPDATE Orders SET TotalAmount = (SELECT IFNULL(SUM(SubTotal),0) FROM OrderDetail WHERE OrderID = ?) WHERE OrderID = ?");
+        totalStmt->setString(1, orderID);
+        totalStmt->setString(2, orderID);
+        totalStmt->execute();
 
 
-            delete totalStmt;
-            std::cout << "Order updated successfully!\n";
-        }
+        delete totalStmt;
+        std::cout << "Order updated successfully!\n";
+        
 
     }
     catch (sql::SQLException& e) {
         std::cerr << e.what();
     }
 }
-
 
 void Waiter::requestPayment()
 {
