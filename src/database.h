@@ -20,7 +20,7 @@ private:
     DatabaseManager(std::string ip, std::string username, std::string password);
 
 public:
-    static DatabaseManager* getInstance(std::string ip = "127.0.0.1:3306", std::string user = "root", std::string pass = "1234");
+    static DatabaseManager* getInstance(std::string ip = "", std::string user = "", std::string pass = "");
     sql::Connection* getConnection();
     ~DatabaseManager();
 };
