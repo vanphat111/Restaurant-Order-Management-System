@@ -1,21 +1,31 @@
 // admin.cpp
 
 #include "admin.h"
+#include "colors.h"
 #include <limits>
+#include <iostream>
+#include <iomanip>
 
 void Admin::showMenu() {
     int choice;
     do {
-        std::cout << "\n==========================================";
-        std::cout << "\n   ADMIN DASHBOARD - Admin: " << this->userName;
-        std::cout << "\n==========================================";
-        std::cout << "\n1. Manage System Users";
-        std::cout << "\n2. View Revenue Reports";
-        std::cout << "\n3. Generate Daily Report";
-        std::cout << "\n4. Get Best Seller";
-        std::cout << "\n5. Manage Menu";
-        std::cout << "\n0. Logout";
-        std::cout << "\n------------------------------------------";
+        // Xóa màn hình cho sạch sẽ mỗi lần load lại menu
+        std::cout << CLEAR_SCREEN;
+        
+        // Header chính
+        std::cout << COLOR_TITLE << "==========================================";
+        std::cout << "\n   " << BOLD << "ADMIN DASHBOARD" << RESET << " - User: " << COLOR_HIGHLIGHT << this->userName << RESET;
+        std::cout << COLOR_TITLE << "\n==========================================" << RESET;
+        
+        // Menu options
+        std::cout << "\n" << COLOR_HIGHLIGHT << "1." << RESET << " Manage System Users";
+        std::cout << "\n" << COLOR_HIGHLIGHT << "2." << RESET << " View Revenue Reports";
+        std::cout << "\n" << COLOR_HIGHLIGHT << "3." << RESET << " Generate Daily Report";
+        std::cout << "\n" << COLOR_HIGHLIGHT << "4." << RESET << " Get Best Seller";
+        std::cout << "\n" << COLOR_HIGHLIGHT << "5." << RESET << " Manage Menu";
+        std::cout << "\n" << COLOR_ERROR     << "0. Logout" << RESET;
+        
+        std::cout << COLOR_TITLE << "\n------------------------------------------" << RESET;
         std::cout << "\nEnter choice: ";
         
         if (!(std::cin >> choice)) {
@@ -32,27 +42,34 @@ void Admin::showMenu() {
             case 4: getBestSellers(); break;
             case 5: manageMenu(); break;
             case 0: break;
-            default: std::cout << "Invalid choice!\n";
+            default: 
+                std::cout << COLOR_ERROR << "[!] Invalid choice! Press Enter to try again." << RESET;
+                std::cin.get();
         }
     } while (choice != 0);
 }
 
 void Admin::manageUsers() {
+    std::cout << CLEAR_SCREEN;
     try {
         sql::Connection* con = DatabaseManager::getInstance()->getConnection();
         sql::Statement* stmt = con->createStatement();
         sql::ResultSet* res = stmt->executeQuery("SELECT UserID, UserName, Role FROM User");
 
-        std::cout << "\n--- CURRENT SYSTEM USERS ---\n";
-        std::cout << std::left << std::setw(10) << "ID" << std::setw(15) << "Username" << "Role\n";
+        std::cout << COLOR_SUBTITLE << "\n--- CURRENT SYSTEM USERS ---\n" << RESET;
+        // Header bảng màu Cyan đậm
+        std::cout << COLOR_SUBTITLE << std::left << std::setw(10) << "ID" << std::setw(15) << "Username" << "Role" << RESET << "\n";
+        std::cout << GRAY << "------------------------------------------" << RESET << "\n";
+        
         while (res->next()) {
             std::cout << std::left << std::setw(10) << res->getString("UserID") 
                       << std::setw(15) << res->getString("UserName") 
-                      << res->getString("Role") << "\n";
+                      << COLOR_HIGHLIGHT << res->getString("Role") << RESET << "\n";
         }
         delete res; delete stmt;
 
-        std::cout << "\n1. Add User | 2. Delete User | 3. Change role | 0. Back: ";
+        std::cout << GRAY << "------------------------------------------" << RESET << "\n";
+        std::cout << "1. Add User | 2. Delete User | 3. Change role | " << COLOR_ERROR << "0. Back" << RESET << ": ";
         int sub; 
         if(!(std::cin >> sub)) {
             std::cin.clear();
@@ -65,18 +82,20 @@ void Admin::manageUsers() {
         else if (sub == 2) deleteUser();
         else if (sub == 3) changeRole();
 
-    } catch (sql::SQLException &e) { std::cerr << "DB Error: " << e.what() << "\n"; }
+    } catch (sql::SQLException &e) { std::cerr << COLOR_ERROR << "DB Error: " << e.what() << RESET << "\n"; std::cin.get(); }
 }
 
 void Admin::addUser() {
     std::string id, name, pass, role;
+    std::cout << "\n" << COLOR_SUBTITLE << "[ ADD NEW USER ]" << RESET << "\n";
     std::cout << "New UserID: "; std::getline(std::cin, id);
     std::cout << "Username: "; std::getline(std::cin, name);
     std::cout << "Password: "; std::getline(std::cin, pass);
     std::cout << "Role [Admin/Waiter/Chef]: "; std::getline(std::cin, role);
 
     if (!(role == "Admin" || role == "Chef" || role == "Waiter")) {
-        std::cout << "[FAILED] This system does not have a/an " << role << " role.\n";
+        std::cout << COLOR_ERROR << "[FAILED] This system does not have a/an " << role << " role." << RESET << "\n";
+        std::cout << "Press Enter to continue..."; std::cin.get();
         return;
     }
 
@@ -90,31 +109,48 @@ void Admin::addUser() {
         pstmt->setString(3, pass);
         pstmt->setString(4, role);
         pstmt->executeUpdate();
-        std::cout << "[SUCCESS] User added.\n";
+        std::cout << COLOR_SUCCESS << "[SUCCESS] User added successfully." << RESET << "\n";
         delete pstmt;
-    } catch (sql::SQLException &e) { std::cout << "[ERROR] Could not add user.\n"; }
+    } catch (sql::SQLException &e) { std::cout << COLOR_ERROR << "[ERROR] Could not add user (Duplicate ID?)." << RESET << "\n"; }
+    
+    std::cout << "Press Enter to return..."; std::cin.get();
 }
 
 void Admin::deleteUser() {
     std::string id;
+    std::cout << "\n" << COLOR_ERROR << "[ DELETE USER ]" << RESET << "\n";
     std::cout << "Enter UserID to delete: "; std::getline(std::cin, id);
+    
+    char confirm;
+    std::cout << "Are you sure? (y/n): "; std::cin >> confirm;
+    std::cin.ignore(); // Xóa buffer
+
+    if (confirm != 'y' && confirm != 'Y') return;
+
     try {
         sql::Connection* con = DatabaseManager::getInstance()->getConnection();
         sql::PreparedStatement* pstmt = con->prepareStatement("DELETE FROM User WHERE UserID = ?");
         pstmt->setString(1, id);
-        pstmt->executeUpdate();
-        std::cout << "[SUCCESS] User deleted.\n";
+        int rows = pstmt->executeUpdate();
+        if (rows > 0)
+            std::cout << COLOR_SUCCESS << "[SUCCESS] User deleted." << RESET << "\n";
+        else 
+            std::cout << COLOR_ERROR << "[FAILED] User ID not found." << RESET << "\n";
         delete pstmt;
-    } catch (sql::SQLException &e) { std::cout << "[ERROR] Cannot delete user.\n"; }
+    } catch (sql::SQLException &e) { std::cout << COLOR_ERROR << "[ERROR] Cannot delete user." << RESET << "\n"; }
+    
+    std::cout << "Press Enter to return..."; std::cin.get();
 }
 
 void Admin::changeRole() {
     std::string id, _role;
+    std::cout << "\n" << COLOR_SUBTITLE << "[ CHANGE ROLE ]" << RESET << "\n";
     std::cout << "Enter UserID to change role: "; std::getline(std::cin, id);
-    std::cout << "Enter role [Admin/Chef/Waiter]: "; std::getline(std::cin, _role);
+    std::cout << "Enter new role [Admin/Chef/Waiter]: "; std::getline(std::cin, _role);
 
     if (!(_role == "Admin" || _role == "Chef" || _role == "Waiter")) {
-        std::cout << "[FAILED] This system does not have a/an " << _role << " role.\n";
+        std::cout << COLOR_ERROR << "[FAILED] Invalid role." << RESET << "\n";
+        std::cout << "Press Enter to return..."; std::cin.get();
         return;
     }
     try {
@@ -125,44 +161,50 @@ void Admin::changeRole() {
         int rowsAffected = pstmt->executeUpdate();
 
         if (rowsAffected > 0) {
-            std::cout << "[SUCCESS] Role updated for UserID: " << id << "\n";
+            std::cout << COLOR_SUCCESS << "[SUCCESS] Role updated for UserID: " << id << RESET << "\n";
         } else {
-            std::cout << "[FAILED] No user found with ID: " << id << "\n";
+            std::cout << COLOR_ERROR << "[FAILED] No user found with ID: " << id << RESET << "\n";
         }
 
         delete pstmt;
-    } catch (sql::SQLException &e) { std::cout << "[ERROR] Cannot change role.\n"; }
+    } catch (sql::SQLException &e) { std::cout << COLOR_ERROR << "[ERROR] Cannot change role." << RESET << "\n"; }
+    
+    std::cout << "Press Enter to return..."; std::cin.get();
 }
 
 void Admin::viewSaleReport() {
+    std::cout << CLEAR_SCREEN;
     try {
         sql::Connection* con = DatabaseManager::getInstance()->getConnection();
         sql::Statement* stmt = con->createStatement();
         sql::ResultSet* res = stmt->executeQuery("SELECT * FROM Report ORDER BY ReportDate DESC");
 
-        std::cout << "\n--- REVENUE REPORT ---\n";
-        std::cout << std::left << std::setw(15) << "Date" << std::setw(15) << "Revenue" << "Orders\n";
+        std::cout << COLOR_TITLE << "\n--- REVENUE REPORT ---\n" << RESET;
+        std::cout << COLOR_SUBTITLE << std::left << std::setw(15) << "Date" << std::setw(15) << "Revenue (VND)" << "Orders" << RESET << "\n";
+        std::cout << GRAY << "------------------------------------------" << RESET << "\n";
+        
         while (res->next()) {
             std::cout << std::left << std::setw(15) << res->getString("ReportDate")
-                      << std::setw(15) << res->getDouble("DailyRevenue")
+                      << std::setw(15) << std::fixed << std::setprecision(0) << res->getDouble("DailyRevenue")
                       << res->getInt("OrderCount") << "\n";
         }
         delete res; delete stmt;
         
         std::cout << "\nPress Enter to return...";
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    } catch (sql::SQLException &e) { std::cerr << "DB Error: " << e.what() << "\n"; }
+    } catch (sql::SQLException &e) { std::cerr << COLOR_ERROR << "DB Error: " << e.what() << RESET << "\n"; std::cin.get(); }
 }
 
 void Admin::manageMenu() {
     int choice;
     do {
-        std::cout << "\n--- MENU MANAGEMENT ---";
-        std::cout << "\n1. Display All Items";
-        std::cout << "\n2. Add New Item";
-        std::cout << "\n3. Update Item (Price/Qty)";
-        std::cout << "\n4. Delete Item";
-        std::cout << "\n0. Back";
+        std::cout << CLEAR_SCREEN;
+        std::cout << COLOR_TITLE << "--- MENU MANAGEMENT ---" << RESET;
+        std::cout << "\n" << COLOR_HIGHLIGHT << "1." << RESET << " Display All Items";
+        std::cout << "\n" << COLOR_HIGHLIGHT << "2." << RESET << " Add New Item";
+        std::cout << "\n" << COLOR_HIGHLIGHT << "3." << RESET << " Update Item (Price/Qty)";
+        std::cout << "\n" << COLOR_HIGHLIGHT << "4." << RESET << " Delete Item";
+        std::cout << "\n" << COLOR_ERROR     << "0." << RESET << " Back";
         std::cout << "\nEnter choice: ";
         
         if (!(std::cin >> choice)) {
@@ -173,7 +215,7 @@ void Admin::manageMenu() {
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
         switch (choice) {
-            case 1: displayAllItems(); break;
+            case 1: displayAllItems(); std::cout << "Press Enter..."; std::cin.get(); break;
             case 2: addMenuItem(); break;
             case 3: updateMenuItem(); break;
             case 4: deleteMenuItem(); break;
@@ -185,30 +227,33 @@ void Admin::displayAllItems() {
     try {
         sql::Connection* con = DatabaseManager::getInstance()->getConnection();
         sql::Statement* stmt = con->createStatement();
-        sql::ResultSet* res = stmt->executeQuery("SELECT * FROM MenuItem");
-        std::cout << "CURRENT MENU";
-        std::cout << "\n" << std::string(75, '=') << "\n";
-        std::cout << std::left << std::setw(10) << "Code" << std::setw(20) << "Name" 
-                  << std::setw(12) << "Price" << std::setw(10) << "Qty" << "Category\n";
-        std::cout << std::string(75, '-') << "\n";
+        sql::ResultSet* res = stmt->executeQuery("SELECT * FROM MenuItem ORDER BY Category, ItemCode");
+        
+        std::cout << COLOR_TITLE << "\nCURRENT MENU" << RESET;
+        std::cout << "\n" << GRAY << std::string(75, '=') << RESET << "\n";
+        std::cout << COLOR_SUBTITLE << std::left << std::setw(10) << "Code" << std::setw(25) << "Name" 
+                  << std::setw(12) << "Price" << std::setw(10) << "Qty" << "Category" << RESET << "\n";
+        std::cout << GRAY << std::string(75, '-') << RESET << "\n";
 
         while (res->next()) {
             std::cout << std::left << std::setw(10) << res->getString("ItemCode")
-                      << std::setw(20) << res->getString("ItemName")
+                      << std::setw(25) << res->getString("ItemName")
                       << std::setw(12) << res->getDouble("Price")
                       << std::setw(10) << res->getInt("InventoryQty")
                       << res->getString("Category") << "\n";
         }
         delete res; delete stmt;
-        std::cout << std::string(75, '=') << "\n";
-    } catch (sql::SQLException &e) { std::cerr << "Error: " << e.what() << "\n"; }
+        std::cout << GRAY << std::string(75, '=') << RESET << "\n";
+    } catch (sql::SQLException &e) { std::cerr << COLOR_ERROR << "Error: " << e.what() << RESET << "\n"; }
 }
 
 void Admin::addMenuItem() {
+    std::cout << CLEAR_SCREEN;
+    displayAllItems();
+    std::cout << "\n" << COLOR_SUBTITLE << "[ ADD NEW ITEM ]" << RESET << "\n";
+
     std::string code, name, desc, cat;
     double price; int qty;
-
-    displayAllItems();
 
     std::cout << "Item Code (e.g., M03): "; std::getline(std::cin, code);
     std::cout << "Item Name: "; std::getline(std::cin, name);
@@ -230,13 +275,17 @@ void Admin::addMenuItem() {
         pstmt->setInt(5, qty);
         pstmt->setString(6, cat);
         pstmt->executeUpdate();
-        std::cout << "[SUCCESS] New item added to menu.\n";
+        std::cout << COLOR_SUCCESS << "[SUCCESS] New item added to menu." << RESET << "\n";
         delete pstmt;
-    } catch (sql::SQLException &e) { std::cout << "[ERROR] Duplicate code or DB error.\n"; }
+    } catch (sql::SQLException &e) { std::cout << COLOR_ERROR << "[ERROR] Duplicate code or DB error." << RESET << "\n"; }
+    
+    std::cout << "Press Enter to return..."; std::cin.get();
 }
 
 void Admin::updateMenuItem() {
+    std::cout << CLEAR_SCREEN;
     displayAllItems();
+    std::cout << "\n" << COLOR_SUBTITLE << "[ UPDATE ITEM ]" << RESET << "\n";
 
     std::string code; double newPrice; int newQty;
     std::cout << "Enter Item Code to update: "; std::getline(std::cin, code);
@@ -253,30 +302,43 @@ void Admin::updateMenuItem() {
         pstmt->setInt(2, newQty);
         pstmt->setString(3, code);
         
-        if (pstmt->executeUpdate() > 0) std::cout << "[SUCCESS] Item updated.\n";
-        else std::cout << "[FAILED] Item code not found.\n";
+        if (pstmt->executeUpdate() > 0) std::cout << COLOR_SUCCESS << "[SUCCESS] Item updated." << RESET << "\n";
+        else std::cout << COLOR_ERROR << "[FAILED] Item code not found." << RESET << "\n";
         delete pstmt;
-    } catch (sql::SQLException &e) { std::cout << "[ERROR] Update failed.\n"; }
+    } catch (sql::SQLException &e) { std::cout << COLOR_ERROR << "[ERROR] Update failed." << RESET << "\n"; }
+    
+    std::cout << "Press Enter to return..."; std::cin.get();
 }
 
 void Admin::deleteMenuItem() {
+    std::cout << CLEAR_SCREEN;
     displayAllItems();
+    std::cout << "\n" << COLOR_ERROR << "[ DELETE ITEM ]" << RESET << "\n";
 
     std::string code;
     std::cout << "Enter Item Code to delete: "; std::getline(std::cin, code);
+    
+    char confirm;
+    std::cout << "Are you sure? (y/n): "; std::cin >> confirm;
+    std::cin.ignore();
+
+    if (confirm != 'y' && confirm != 'Y') return;
+
     try {
         sql::Connection* con = DatabaseManager::getInstance()->getConnection();
         sql::PreparedStatement* pstmt = con->prepareStatement("DELETE FROM MenuItem WHERE ItemCode = ?");
         pstmt->setString(1, code);
-        if (pstmt->executeUpdate() > 0) std::cout << "[SUCCESS] Item removed.\n";
-        else std::cout << "[FAILED] Item not found.\n";
+        if (pstmt->executeUpdate() > 0) std::cout << COLOR_SUCCESS << "[SUCCESS] Item removed." << RESET << "\n";
+        else std::cout << COLOR_ERROR << "[FAILED] Item not found." << RESET << "\n";
         delete pstmt;
     } catch (sql::SQLException &e) { 
-        std::cout << "[ERROR] Cannot delete (Item might be linked to existing orders).\n"; 
+        std::cout << COLOR_ERROR << "[ERROR] Cannot delete (Item might be linked to existing orders)." << RESET << "\n"; 
     }
+    std::cout << "Press Enter to return..."; std::cin.get();
 }
 
 void Admin::generateDailyReport() {
+    std::cout << CLEAR_SCREEN;
     try {
         sql::Connection* con = DatabaseManager::getInstance()->getConnection();
         
@@ -292,7 +354,7 @@ void Admin::generateDailyReport() {
         stmt->execute(query);
         delete stmt;
 
-        std::cout << "[SUCCESS] Daily Report for today has been updated!\n";
+        std::cout << COLOR_SUCCESS << "[SUCCESS] Daily Report for today has been updated!" << RESET << "\n";
 
         sql::Statement* viewStmt = con->createStatement();
         sql::ResultSet* res = viewStmt->executeQuery(
@@ -300,20 +362,22 @@ void Admin::generateDailyReport() {
         );
 
         if (res->next()) {
-            std::cout << "------------------------------------------\n";
-            std::cout << "Date: " << res->getString("ReportDate") << "\n";
-            std::cout << "Total Revenue: " << res->getDouble("DailyRevenue") << " VND\n";
+            std::cout << COLOR_TITLE << "------------------------------------------" << RESET << "\n";
+            std::cout << "Date: " << BOLD << res->getString("ReportDate") << RESET << "\n";
+            std::cout << "Total Revenue: " << COLOR_HIGHLIGHT << std::fixed << std::setprecision(0) << res->getDouble("DailyRevenue") << " VND" << RESET << "\n";
             std::cout << "Total Orders: " << res->getInt("OrderCount") << "\n";
-            std::cout << "------------------------------------------\n";
+            std::cout << COLOR_TITLE << "------------------------------------------" << RESET << "\n";
         }
         delete res; delete viewStmt;
 
     } catch (sql::SQLException &e) {
-        std::cerr << "Report Error: " << e.what() << "\n";
+        std::cerr << COLOR_ERROR << "Report Error: " << e.what() << RESET << "\n";
     }
+    std::cout << "\nPress Enter to return..."; std::cin.get();
 }
 
 void Admin::getBestSellers() {
+    std::cout << CLEAR_SCREEN;
     try {
         sql::Connection* con = DatabaseManager::getInstance()->getConnection();
         sql::Statement* stmt = con->createStatement();
@@ -328,23 +392,23 @@ void Admin::getBestSellers() {
 
         sql::ResultSet* res = stmt->executeQuery(query);
 
-        std::cout << "\n" << std::string(45, '=') << "\n";
-        std::cout << "        TOP 5 BEST SELLING ITEMS        \n";
-        std::cout << std::string(45, '-') << "\n";
-        std::cout << std::left << std::setw(30) << "Item Name" << "Total Sold\n";
-        std::cout << std::string(45, '-') << "\n";
+        std::cout << "\n" << COLOR_TITLE << std::string(45, '=') << RESET << "\n";
+        std::cout << BOLD << "        TOP 5 BEST SELLING ITEMS        " << RESET << "\n";
+        std::cout << COLOR_TITLE << std::string(45, '-') << RESET << "\n";
+        std::cout << COLOR_SUBTITLE << std::left << std::setw(30) << "Item Name" << "Total Sold" << RESET << "\n";
+        std::cout << COLOR_TITLE << std::string(45, '-') << RESET << "\n";
 
         bool hasData = false;
         while (res->next()) {
             hasData = true;
             std::cout << std::left << std::setw(30) << res->getString("ItemName")
-                      << res->getInt("TotalSold") << " units\n";
+                      << COLOR_HIGHLIGHT << res->getInt("TotalSold") << " units" << RESET << "\n";
         }
 
         if (!hasData) {
-            std::cout << "No sales data available yet.\n";
+            std::cout << YELLOW << "No sales data available yet." << RESET << "\n";
         }
-        std::cout << std::string(45, '=') << "\n";
+        std::cout << COLOR_TITLE << std::string(45, '=') << RESET << "\n";
 
         delete res; delete stmt;
         
@@ -352,6 +416,7 @@ void Admin::getBestSellers() {
         std::cin.get();
 
     } catch (sql::SQLException &e) {
-        std::cerr << "Best Seller Error: " << e.what() << "\n";
+        std::cerr << COLOR_ERROR << "Best Seller Error: " << e.what() << RESET << "\n";
+        std::cin.get();
     }
 }

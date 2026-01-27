@@ -1,7 +1,9 @@
 // user.cpp
 
 #include "user.h"
-// #include "chef.h" // Add class chức vụ ở đây
+#include "chef.h" // Add class chức vụ ở đây
+#include "admin.h"
+#include "waiter.h"
 
 User* User::login(std::string _userName, std::string _password) {
     sql::Connection* con = DatabaseManager::getInstance()->getConnection();
@@ -15,7 +17,9 @@ User* User::login(std::string _userName, std::string _password) {
     User* currentUser = nullptr;
     if (res->next()) {
         std::string role = res->getString("Role");
-        // if (role == "Chef") currentUser = new Chef(_userName); // Kế thừa role ngay đây
+        if (role == "Chef") currentUser = new Chef(_userName); // Kế thừa role ngay đây
+        else if (role == "Admin") currentUser = new Admin(_userName);
+        else if (role == "Waiter") currentUser = new Waiter(_userName);
 
     }
 
