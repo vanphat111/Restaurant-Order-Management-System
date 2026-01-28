@@ -344,11 +344,11 @@ void Admin::generateDailyReport() {
     try {
         sql::Connection* con = DatabaseManager::getInstance()->getConnection();
         
-        std::string query = 
-            "INSERT INTO Report (ReportDate, DailyRevenue, OrderCount) "
-            "SELECT DATE(CreationTime), SUM(TotalAmount), COUNT(OrderID) "
+        std::string query = "INSERT INTO Report (ReportDate, DailyRevenue, OrderCount) "
+            "SELECT DATE(CreationTime), IFNULL(SUM(TotalAmount), 0), COUNT(OrderID) "
             "FROM Orders "
             "WHERE CookingStatus = 'READY' AND DATE(CreationTime) = CURDATE() "
+            "GROUP BY DATE(CreationTime) "
             "ON DUPLICATE KEY UPDATE "
             "DailyRevenue = VALUES(DailyRevenue), OrderCount = VALUES(OrderCount)";
 
