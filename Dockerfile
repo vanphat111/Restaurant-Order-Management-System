@@ -2,10 +2,15 @@ FROM gcc:latest
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y libmysqlcppconn-dev libssl-dev
+RUN apt-get update && apt-get install -y libmysqlcppconn-dev libssl-dev cmake
 
 COPY src/ ./src/
+COPY CMakeLists.txt .
 
-RUN g++ src/*.cpp -o client -lmysqlcppconn -lssl -lcrypto
+WORKDIR /app/build
 
-CMD ["./client"]
+RUN cmake ..
+
+RUN make
+
+CMD ["./nha-hang-client"]
